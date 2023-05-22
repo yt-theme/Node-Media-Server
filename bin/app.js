@@ -45,10 +45,22 @@ const config = {
     allow_origin: '*',
     api: true
   },
-  https: {
-    port: argv.https_port,
-    key: __dirname+'/privatekey.pem',
-    cert: __dirname+'/certificate.pem',
+//  https: {
+//    port: argv.https_port,
+//    key: __dirname+'/privatekey.pem',
+//    cert: __dirname+'/certificate.pem',
+//  },
+  trans: {
+    ffmpeg: "/usr/bin/ffmpeg",
+    tasks: [
+        {
+            app: "live",
+            mp4: true,
+            segment: true,
+            segment_duration: 30,
+            mp4Flags: '[movflags=frag_keyframe+empty_moov]',
+        }
+    ]
   },
   auth: {
     api: true,

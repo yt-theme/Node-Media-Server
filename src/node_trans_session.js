@@ -45,8 +45,15 @@ class NodeTransSession extends EventEmitter {
     }
     if (this.conf.mp4) {
       this.conf.mp4Flags = this.conf.mp4Flags ? this.conf.mp4Flags : '';
-      let mp4FileName = dateFormat('yyyy-mm-dd-HH-MM-ss') + '.mp4';
-      let mapMp4 = `${this.conf.mp4Flags}${ouPath}/${mp4FileName}|`;
+      let mp4FileName;
+      let mapMp4;
+      if (this.conf.segment) {
+        mp4FileName = '%Y-%m-%d-%H-%M-%S.mp4';
+        mapMp4 = `${ouPath}/${mp4FileName}`;
+      } else {
+        mp4FileName = dateFormat('yyyy-mm-dd-HH-MM-ss') + '.mp4';
+        mapMp4 = `${this.conf.mp4Flags}${ouPath}/${mp4FileName}|`;
+      }
       mapStr += mapMp4;
       Logger.log('[Transmuxing MP4] ' + this.conf.streamPath + ' to ' + ouPath + '/' + mp4FileName);
     }
@@ -70,9 +77,24 @@ class NodeTransSession extends EventEmitter {
     Array.prototype.push.apply(argv, this.conf.vcParam);
     Array.prototype.push.apply(argv, ['-c:a', ac]);
     Array.prototype.push.apply(argv, this.conf.acParam);
-    Array.prototype.push.apply(argv, ['-f', 'tee', '-map', '0:a?', '-map', '0:v?', mapStr]);
+    if (this.conf.segment) {
+      Array.prototype.push.apply(argv, ['-segment_time', this.conf.segment_duration || 60]);
+      Array.prototype.push.apply(argv, ['-use_wallclock_as_timestamps', '1']);
+      Array.prototype.push.apply(argv, ['-reset_timestamps', '1']);
+      Array.prototype.push.apply(argv, ['-segment_atclocktime', '1']);
+      Array.prototype.push.apply(argv, ['-strftime', '1']);
+      Array.prototype.push.apply(argv, ['-f', 'segment', '-map', '0:a?', '-map', '0:v?', mapStr]);
+    } else {
+     Array.prototype.push.apply(argv, ['-f', 'tee', '-map', '0:a?', '-map', '0:v?', mapStr]);
+    }
+   
     argv = argv.filter((n) => { return n; }); //去空
     
+    console.log("inPath ==========>", inPath)
+    console.log("this.conf.ffmpeg ==========>", this.conf.ffmpeg)
+    console.log("argv ==========>", argv.join(" "))
+    console.log(" =============>")
+
     this.ffmpeg_exec = spawn(this.conf.ffmpeg, argv);
     this.ffmpeg_exec.on('error', (e) => {
       Logger.ffdebug(e);
