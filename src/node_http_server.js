@@ -16,7 +16,8 @@ const basicAuth = require('basic-auth-connect');
 const NodeFlvSession = require('./node_flv_session');
 const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
-const HTTP_MEDIAROOT = './media';
+const serveIndex = require('serve-index');
+const HTTP_MEDIAROOT = '../media';
 const Logger = require('./node_core_logger');
 const context = require('./node_core_ctx');
 
@@ -69,6 +70,9 @@ class NodeHttpServer {
     if (config.http.webroot) {
       app.use(Express.static(config.http.webroot));
     }
+
+    // 媒体静态目录
+    app.use('/media', Express.static(this.mediaroot), serveIndex(this.mediaroot, {'icons': true}))
 
     this.httpServer = Http.createServer(app);
 

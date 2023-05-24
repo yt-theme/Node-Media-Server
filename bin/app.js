@@ -1,5 +1,6 @@
 #!/usr/bin/env node 
 
+const path = require('path');
 const NodeMediaServer = require('..');
 let argv = require('minimist')(process.argv.slice(2),
   {
@@ -40,7 +41,7 @@ const config = {
   },
   http: {
     port: argv.http_port,
-    mediaroot: __dirname+'/media',
+    mediaroot: path.join(__dirname ,'../media'),
     webroot: __dirname+'/www',
     allow_origin: '*',
     api: true
