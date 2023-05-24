@@ -67,7 +67,7 @@ const config = {
                 // 任务间隔时间(毫秒)
                 interval: 30 * 1000,
                 // 设置最大磁盘占用量阈值(字节) 可实现行车记录仪模式
-                max_disk_usage: (1024 * 1024 * 1024) * 7, // 7GB
+                max_disk_usage: (1024 * 1024 * 1024) * 8, // 8GB
                 // 上传到云盘配置
                 cloud_disk: {
 
