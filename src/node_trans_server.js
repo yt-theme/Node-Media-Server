@@ -6,6 +6,7 @@
 const Logger = require('./node_core_logger');
 
 const NodeTransSession = require('./node_trans_session');
+const NodeTransSchedule = require('./node_trans_shedule');
 const context = require('./node_core_ctx');
 const { getFFmpegVersion, getFFmpegUrl } = require('./node_core_utils');
 const fs = require('fs');
@@ -16,6 +17,7 @@ class NodeTransServer {
   constructor(config) {
     this.config = config;
     this.transSessions = new Map();
+    this.schedules = new Map();
   }
 
   async run() {
@@ -66,11 +68,26 @@ class NodeTransServer {
       conf.streamName = name;
       conf.args = args;
       if (app === conf.app) {
+        // schedule
+        if (conf.schedule) {
+          // 执行定时任务
+          let schedule = new NodeTransSchedule(conf)
+          this.schedules.set(id, schedule);
+          schedule.run();
+        }
+        // session
         let session = new NodeTransSession(conf);
         this.transSessions.set(id, session);
         session.on('end', () => {
+          // session
           this.transSessions.delete(id);
+          // schedule
+          try {
+            this.schedules.get(id).stop();
+            this.schedules.delete(id);
+          } catch(e) {}
         });
+
         session.run();
       }
     }
