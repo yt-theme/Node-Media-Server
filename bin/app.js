@@ -60,14 +60,14 @@ const config = {
             // 分段
             segment: true,
             // 每个分段的秒数
-            segment_duration: 30,
+            segment_duration: 60,
             mp4Flags: '[movflags=frag_keyframe+empty_moov]',
             // 定时任务
             schedule: {
                 // 任务间隔时间(毫秒)
                 interval: 30 * 1000,
                 // 设置最大磁盘占用量阈值(字节) 可实现行车记录仪模式
-                max_disk_usage: (1024 * 1024 * 1024) * 8, // 8GB
+                max_disk_usage: (1024 * 1024 * 1024) * 16, // 16GB
                 // 上传到云盘配置
                 cloud_disk: {
 
