@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const moment = require("moment");
+const { mkdirp } = require("mkdirp");
 const { timestampToDateYMD, timestampWithYMD } = require("./utils/dateTrans");
 
 class NodeTransSchedule {
@@ -44,12 +45,12 @@ class NodeTransSchedule {
         
         let isExists = fs.existsSync(curPath);
         if (!isExists) {
-            fs.mkdirSync(curPath);
+            mkdirp.sync(curPath);
         }
 
         isExists = fs.existsSync(tomorrowPath);
         if (!isExists) {
-            fs.mkdirSync(tomorrowPath);
+            mkdirp.sync(tomorrowPath);
         }
     }
 
