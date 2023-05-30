@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const moment = require("moment");
+const { timestampToDateYMD, timestampWithYMD } = require("./utils/dateTrans");
 
 class NodeTransSchedule {
     constructor(config) {
@@ -8,11 +10,17 @@ class NodeTransSchedule {
     }
 
     run () {
-        this.checkFileMax();
-        const interval =  this.conf.schedule.interval ? this.conf.schedule.interval : 1
-        this.timer = setInterval(() => {
-            this.checkFileMax();
-        }, interval)
+       this.checkFileMax();
+       this.checkMkdir();
+       const interval =  this.conf.schedule.interval ? this.conf.schedule.interval : 1
+       this.timer = setInterval(() => {
+           this.checkFileMax();
+           this.checkMkdir();
+       }, interval)
+
+        ///
+        // this.checkFileMaxWithDateDir();
+        ///
     }
 
     stop () {
@@ -20,37 +28,81 @@ class NodeTransSchedule {
         this.timer = null;
     }
 
+    // 检测并创建目录 创建当前yyyy-mm-dd的和下一天的
+    checkMkdir () {
+        const filePath = `${this.conf.mediaroot}/${this.conf.streamApp}/${this.conf.streamName}`;
+
+        const date = moment(new Date());
+        const cur = date.format('YYYY-MM-DD');
+        const curPath = path.join(filePath, cur);
+
+        date.add(1, 'days');
+        date.format('YYYY-MM-DD');
+        const tomorrow = date.format('YYYY-MM-DD');
+        const tomorrowPath = path.join(filePath, tomorrow);
+
+        
+        let isExists = fs.existsSync(curPath);
+        if (!isExists) {
+            fs.mkdirSync(curPath);
+        }
+
+        isExists = fs.existsSync(tomorrowPath);
+        if (!isExists) {
+            fs.mkdirSync(tomorrowPath);
+        }
+    }
+
+
+    // 将所有目录中文件列出来
+    getDirInnerPathAll() {
+        const filePath = `${this.conf.mediaroot}/${this.conf.streamApp}/${this.conf.streamName}`;
+        const dirRes = fs.readdirSync(filePath)
+        let dirRes2 = [];
+        let result = [];
+        dirRes.forEach((ite) => {
+            let itePath = path.join(filePath, ite);
+            const stat = fs.statSync(itePath);
+            if (stat.isDirectory()) {
+                dirRes2 = fs.readdirSync(itePath);
+                dirRes2.forEach((ite2) => {
+                    let tmpFilePath = path.join(itePath, ite2)
+                    result.push(tmpFilePath)
+                })
+            }
+        })
+        return result;
+    }
+
+    // 检查文件总占用并删除旧文件
     checkFileMax() {
         try {
             const maxDiskUsage = this.conf.schedule.max_disk_usage;
             const mediaroot = this.conf.mediaroot;
             // 计算媒体目录下文件已占用大小 和 每个平均大小
-            const filePath = `${this.conf.mediaroot}/${this.conf.streamApp}/${this.conf.streamName}`;
-            const dirRes = fs.readdirSync(filePath)
+            const fileArr = this.getDirInnerPathAll();
             // 总大小
             let totalSize = 0;
             // 平均大小
             let avgSize = 0;
             // 存储排序后的文件属性对象数组
             let tmpOrderedFiles = [];
-            dirRes.forEach((ite) => {
-                let itePath = path.join(filePath, ite);
-                const name = ite;
-                const fullPath = itePath;
-                const stat = fs.statSync(itePath);
+            fileArr.forEach((filePath) => {
+                const fullPath = filePath;
+                const stat = fs.statSync(filePath);
                 const size = stat.size;
                 const birthtimeMs = stat.birthtimeMs;
                 totalSize += size;
-                tmpOrderedFiles.push({ name, fullPath, size, birthtimeMs });
+                tmpOrderedFiles.push({ fullPath, size, birthtimeMs });
             });
-            avgSize = totalSize / dirRes.length
+            avgSize = totalSize / fileArr.length
             // 排序
             tmpOrderedFiles.sort((a, b) => { return a.birthtimeMs - b.birthtimeMs });
             // 去除最新的一项
             tmpOrderedFiles.pop();
             // 删除旧的文件
             console.log("==============================>")
-            console.log("dirRes.length =>", dirRes.length)
+            console.log("fileArr.length =>", fileArr.length)
             console.log("totalSize =>", totalSize)
             console.log("maxDiskUsage =>", maxDiskUsage)
             console.log("avgSize =>", avgSize)

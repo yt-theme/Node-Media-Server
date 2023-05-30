@@ -48,7 +48,7 @@ class NodeTransSession extends EventEmitter {
       let mp4FileName;
       let mapMp4;
       if (this.conf.segment) {
-        mp4FileName = '%Y-%m-%d-%H-%M-%S.mp4';
+        mp4FileName = '%Y-%m-%d/%Y-%m-%d-%H-%M-%S.mp4';
         mapMp4 = `${ouPath}/${mp4FileName}`;
       } else {
         mp4FileName = dateFormat('yyyy-mm-dd-HH-MM-ss') + '.mp4';
@@ -101,6 +101,7 @@ class NodeTransSession extends EventEmitter {
     });
 
     this.ffmpeg_exec.stdout.on('data', (data) => {
+      console.log("on data  ==============>", data)
       Logger.ffdebug(`FF_LOG:${data}`);
     });
 
